@@ -1,10 +1,15 @@
 from flask import Flask, request, abort
+from dotenv import load_dotenv
 from linebot.v3 import (
     WebhookHandler
 )
 from linebot.v3.exceptions import (
     InvalidSignatureError
 )
+from linebot.v3.webhooks import (
+    MessageEvent, 
+    TextMessageContent)
+
 from linebot.v3.messaging import (
     Configuration,
     ApiClient,
@@ -14,7 +19,8 @@ from linebot.v3.messaging import (
     RichMenuRequest,
     RichMenuArea,
     RichMenuBounds,
-    MessageAction
+    MessageAction,
+    TextMessage
 )
 import requests
 import json
@@ -22,11 +28,56 @@ import os
 
 CHANNEL_ACCESS_TOKEN = os.environ.get("CHANNEL_ACCESS_TOKEN")
 CHANNEL_SECRET = os.environ.get("CHANNEL_SECRET")   
+CWA_API_KEY = os.environ.get("CWA_API_KEY")
+
 app = Flask(__name__)
 
 configuration = Configuration(access_token=os.getenv('CHANNEL_ACCESS_TOKEN'))
-line_handler = WebhookHandler(os.getenv('CHANNEL_SECRET'))       
+line_handler = WebhookHandler(os.getenv('CHANNEL_SECRET'))  
 
+
+@line_handler.add(MessageEvent, message=TextMessageContent)
+def handle_text_message(event):
+    user_text = event.message.text.strip()
+
+    if user_text == "現在天氣":
+        weather_text = get_banqiao_weather()
+
+        with ApiClient(configuration) as api_client:
+            MessagingApi(api_client).reply_message(
+                reply_token=event.reply_token,
+                messages=[TextMessage(text=weather_text)]
+            )
+def get_banqiao_weather():
+    api_key = os.environ.get("CWA_API_KEY")
+    if not api_key:
+        return "❌ 尚未設定氣象 API Key"
+
+    url = (
+        "https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-D0047-069"
+        f"?Authorization={api_key}"
+        "&locationName=板橋區"
+        "&elementName=T,Wx"
+    )
+
+    r = requests.get(url, timeout=10)
+    r.raise_for_status()
+    data = r.json()
+
+    location = data["records"]["locations"][0]["location"][0]
+    elements = location["weatherElement"]
+
+    weather = {}
+    for el in elements:
+        name = el["elementName"]
+        value = el["time"][0]["elementValue"][0]["value"]
+        weather[name] = value
+
+    return (
+        "📍 新北市板橋區 即時天氣\n"
+        f"🌤 天氣：{weather.get('Wx', '未知')}\n"
+        f"🌡 氣溫：{weather.get('T', '未知')}°C"
+    )
 
 @app.route("/callback", methods=['POST'])
 def callback():
@@ -59,7 +110,7 @@ def create_rich_menu_1():
                     width=833,
                     height=843
                 ),
-                action=MessageAction(text='A')
+                action=MessageAction(text='現在天氣')
             ),
             RichMenuArea(
                 bounds=RichMenuBounds(
