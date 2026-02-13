@@ -42,7 +42,7 @@ def handle_text_message(event):
     print(f"收到訊息: {user_text}")  # 除錯用
     print(f"訊息的 bytes: {user_text.encode('utf-8')}")  # 檢查編碼
 
-    if user_text == "現在天氣":
+    if user_text == "PCD":
         weather_text = get_banqiao_weather()
 
         with ApiClient(configuration) as api_client:
