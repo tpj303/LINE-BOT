@@ -1,5 +1,4 @@
 from flask import Flask, request, abort
-from dotenv import load_dotenv
 from linebot.v3 import WebhookHandler
 from linebot.v3.exceptions import InvalidSignatureError
 from linebot.v3.webhooks import MessageEvent, TextMessageContent
@@ -7,7 +6,6 @@ from linebot.v3.messaging import Configuration, ApiClient, MessagingApi, TextMes
 import os
 import requests
 
-load_dotenv()
 
 CHANNEL_ACCESS_TOKEN = os.getenv("CHANNEL_ACCESS_TOKEN")
 CHANNEL_SECRET = os.getenv("CHANNEL_SECRET")
@@ -18,6 +16,9 @@ app = Flask(__name__)
 configuration = Configuration(access_token=CHANNEL_ACCESS_TOKEN or "")
 line_handler = WebhookHandler(CHANNEL_SECRET or "")
 
+@app.route("/", methods=["GET"])
+def health():
+    return "OK"
 
 def get_banqiao_weather():
     if not CWA_API_KEY:
