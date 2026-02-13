@@ -39,6 +39,8 @@ line_handler = WebhookHandler(os.getenv('CHANNEL_SECRET'))
 @line_handler.add(MessageEvent, message=TextMessageContent)
 def handle_text_message(event):
     user_text = event.message.text.strip()
+    print(f"收到訊息: {user_text}")  # 除錯用
+    print(f"訊息的 bytes: {user_text.encode('utf-8')}")  # 檢查編碼
 
     if user_text == "現在天氣":
         weather_text = get_banqiao_weather()
