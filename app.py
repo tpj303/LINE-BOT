@@ -63,7 +63,7 @@ def get_banqiao_weather() -> str:
         obs_time = datetime.fromisoformat(obs_time_raw).strftime("%Y-%m-%d %H:%M")
 
         return (
-            "📍 新北市板橋區 當日天氣（即時觀測）\n"
+            "📍 新北市 當日天氣（即時觀測）\n"
             f"📡 地區：{station['StationName']}\n"
             f"🕒 觀測時間：{obs_time}\n"
             f"🌤 天氣：{weather}\n"
